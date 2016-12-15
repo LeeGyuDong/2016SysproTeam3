@@ -6,6 +6,7 @@
 #include <termios.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define BAR 	"-------------" //바 
 #define BLANK	"             " //바 빈칸
@@ -269,6 +270,7 @@ void block_frame()
 void ball_frame()
 {
 	int i, j;	
+	int random;
 	int xOn = 0 , yOn = 0;
 	int futureX = ball.xPos + ball.xDirection; //앞으로 갈 공의 x
 	int futureY = ball.yPos + ball.yDirection; //앞으로 갈 공의 y
@@ -278,23 +280,7 @@ void ball_frame()
 
 	attron(COLOR_PAIR(5)); 
 	
-	if(map[ball.yPos - stageStartHeight][futureX - stageStartWidth] > 0 ) // x방향만 계산했을때 그곳에  뭐가 있을때
-	{	
-		ball.xDirection = -ball.xDirection;
-		xOn = 1;
-		blockBomb( ball.yPos - stageStartHeight, futureX - stageStartWidth); 
-		if(map[ball.yPos - stageStartHeight][futureX - stageStartWidth] != 1)
-			score+= 100;
-	}
-	if(map[futureY - stageStartHeight][ball.xPos - stageStartWidth] > 0 ) // ,y방향만 계산햇을시 그곳에 뭐 있을때
-	{
-		ball.yDirection = -ball.yDirection;
-		yOn = 1;
-		blockBomb( futureY - stageStartHeight, ball.xPos - stageStartWidth);
-		if(map[futureY - stageStartHeight][ball.xPos - stageStartWidth] != 1)
-			score+= 100;
-	}
-	 if( map[ball.yPos - stageStartHeight][futureX - stageStartWidth] == 0 && map[futureY - stageStartHeight][ball.xPos - stageStartWidth] == 0 && map[futureY - stageStartHeight][futureX - stageStartWidth] > 0)
+	if( map[ball.yPos - stageStartHeight][futureX - stageStartWidth] == 0 && map[futureY - stageStartHeight][ball.xPos - stageStartWidth] == 0 && map[futureY - stageStartHeight][futureX - stageStartWidth] > 0)
 	{ // x 방향만 계산하고 y방향만 계산했을때 각각은  둘다에 뭐가 없지만 , x,y방향을 한번에 계산하여  앞으로 갈곳에 뭐가 있을때
 		if( yOn == 0 )	
 			ball.yDirection = -ball.yDirection;
@@ -307,6 +293,22 @@ void ball_frame()
 
 	}
 	
+	else if(map[ball.yPos - stageStartHeight][futureX - stageStartWidth] > 0 ) // x방향만 계산했을때 그곳에  뭐가 있을때
+	{	
+		ball.xDirection = -ball.xDirection;
+		xOn = 1;
+		blockBomb( ball.yPos - stageStartHeight, futureX - stageStartWidth); 
+		if(map[ball.yPos - stageStartHeight][futureX - stageStartWidth] != 1)
+			score+= 100;
+	}
+	else if(map[futureY - stageStartHeight][ball.xPos - stageStartWidth] > 0 ) // ,y방향만 계산햇을시 그곳에 뭐 있을때
+	{
+		ball.yDirection = -ball.yDirection;
+		yOn = 1;
+		blockBomb( futureY - stageStartHeight, ball.xPos - stageStartWidth);
+		if(map[futureY - stageStartHeight][ball.xPos - stageStartWidth] != 1)
+			score+= 100;
+	}
 //	if(ball.xTickStack == ball.xTickMax )
 //	{
 	ball.xPos = ball.xPos + ball.xDirection;
@@ -320,8 +322,14 @@ void ball_frame()
 	if (ball.yPos + ball.yDirection - 1 == barStart)
 	{
 		if (ball.xPos >= bar.x_pos && ball.xPos < bar.x_pos + strlen(bar.symbol))
-		{
+		{	
+			srand((int)time(NULL));
+			random = rand() % 2;
 			ball.yDirection = -1;
+			if (random)
+				ball.xDirection = 1;
+			else
+				ball.xDirection = -1;
 			ball.xPos = ball.xPos + ball.xDirection;
 			ball.yPos = ball.yPos + ball.yDirection;
 		}
