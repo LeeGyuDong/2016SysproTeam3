@@ -26,7 +26,7 @@ void bar_frame();
 void life_check();
 
 int set_tick(int time);
-void initialize();
+void initialize(char* stageName, int i);
 void shutdown();
 void endFrame();
 void crmode2();
@@ -52,17 +52,19 @@ int stageStartHeight;
 int stageStartWidth;
 int stageHeight;
 int stageWidth;
+int stageNumber;
 struct ball ball;
 struct bar bar;
 int command; // 키보드 입력
 int life;
 int score;
+int blockNumber;
 int map[100][100]; // 0 = 허공 , 1 = 벽  , 2 = 벽돌
 int barStart; //바의 높이
 
 int main()
 {
-	initialize();
+	initialize("1.stage",1);
 
 	signal(SIGALRM,frame);	
 	draw_start();
@@ -118,13 +120,14 @@ int main()
 	return 0;
 }
 
-void initialize()
+void initialize(char* stageName, int i)
 {
 	initscr();
 
 	
-	readStage("./1.stage", map, &stageStartHeight, &stageStartWidth, &stageHeight, &stageWidth, &barStart);
+	readStage(stageName, map, &stageStartHeight, &stageStartWidth, &stageHeight, &stageWidth, &barStart);
 	barStart = barStart + stageStartHeight;
+	stageNumber = i;
 
 	bar.symbol = BAR;
         bar.x_pos = stageStartWidth + stageWidth / 2;
@@ -158,21 +161,14 @@ void frame(int sigNum)
 {
 	int i, j;
 	
+	clear();
 
-	//if( tick >= MAX_TICK)
-	//{
-		clear();
-	
-		block_frame();
-		ball_frame();
-		bar_frame();
-		life_check();
-		endFrame();
-	//	tick = 0;
-	//}
+	block_frame();
+	ball_frame();
+	bar_frame();
+	life_check();
+	endFrame();
 
-	//if(tick >= MAX_TICK)
-	//	tick = 0;
 }
 void life_check()
 {
@@ -229,8 +225,8 @@ void blockBomb(int y, int x )
 void block_frame()
 {
 	int i,j, x,y;
-		
-
+	blockNumber = 0 ;	
+	
 	for(i = stageStartHeight,x=0 ; i < stageStartHeight + stageHeight ; i++, x++)
 	{
 		for(j = stageStartWidth,y=0 ; j <stageStartWidth + stageWidth ; j++,y++)
@@ -247,22 +243,32 @@ void block_frame()
 			{
 				attron(COLOR_PAIR(3));
 				printw(" ");
-			
+				blockNumber++;		
 			}
 			else if(map[x][y] == 3)
                         {
                                 attron(COLOR_PAIR(1));
                                 printw(" ");
-
+				blockNumber++;
                         }
 			else if(map[x][y] == 4)
                         {
                                 attron(COLOR_PAIR(4));
                                 printw(" ");
-
+				blockNumber++;
                         }
 
 		}
+	}
+	
+	if( blockNumber == 0 )
+	{
+		for ( i = 0 ; i < stageHeight ; i++)
+			for ( j = 0 ; j < stageWidth ; j++)
+				map[i][j] = 0;
+		if(stageNumber = 1)
+			initialize("2.stage",2);
+
 	}
 
 }
@@ -275,10 +281,7 @@ void ball_frame()
 	int futureX = ball.xPos + ball.xDirection; //앞으로 갈 공의 x
 	int futureY = ball.yPos + ball.yDirection; //앞으로 갈 공의 y
 
-//	ball.xTickStack = ball.xTickStack + 1;
-//	ball.yTickStack = ball.yTickStack + 1;
-
-	attron(COLOR_PAIR(5)); 
+	attron(COLOR_PAIR(5));
 	
 	if( map[ball.yPos - stageStartHeight][futureX - stageStartWidth] == 0 && map[futureY - stageStartHeight][ball.xPos - stageStartWidth] == 0 && map[futureY - stageStartHeight][futureX - stageStartWidth] > 0)
 	{ // x 방향만 계산하고 y방향만 계산했을때 각각은  둘다에 뭐가 없지만 , x,y방향을 한번에 계산하여  앞으로 갈곳에 뭐가 있을때
@@ -309,16 +312,10 @@ void ball_frame()
 		if(map[futureY - stageStartHeight][ball.xPos - stageStartWidth] != 1)
 			score+= 100;
 	}
-//	if(ball.xTickStack == ball.xTickMax )
-//	{
+	
 	ball.xPos = ball.xPos + ball.xDirection;
-//		ball.xTickStack = 0;
-//	}
-	//if(ball.yTickStack == ball.yTickMax)
-	//{
 	ball.yPos = ball.yPos + ball.yDirection;
-//		ball.yTickStack = 0;
-//	}
+
 	if (ball.yPos + ball.yDirection - 1 == barStart)
 	{
 		if (ball.xPos >= bar.x_pos && ball.xPos < bar.x_pos + strlen(bar.symbol))
